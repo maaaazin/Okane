@@ -45,6 +45,14 @@ export const EVALUATOR_DEFAULTS = {
   maxRevisionCount: 1,
 } as const;
 
+export const GRAPH_DEFAULTS = {
+  // Second safety net on top of the revision counters. The longest legal path
+  // is about ten supersteps, so this leaves room without allowing a runaway.
+  recursionLimit: 20,
+  maxResearchRevisions: 1,
+  maxStrategyRevisions: 1,
+} as const;
+
 const API_KEY_VAR = "ANTHROPIC_API_KEY";
 // Existing flag from .env.example. It is a plain boolean, not a secret.
 const DEMO_MODE_VAR = "NEXT_PUBLIC_DEMO_MODE";

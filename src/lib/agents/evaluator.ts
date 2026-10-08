@@ -153,6 +153,22 @@ export function runEvaluatorAgent(
       score >= EVALUATOR_DEFAULTS.passThreshold
     ) {
       nextRoute = "HUMAN_APPROVAL";
+    } else if (
+      // Adjusted for graph integration: a low quality approved proposal gets one
+      // bounded pass back to the stage named by the flags, per the architecture doc.
+      data.riskReview &&
+      data.riskReview.decision === "APPROVE" &&
+      flags.has("MISSING_CITATION") &&
+      data.counters.researchRevisionCount < EVALUATOR_DEFAULTS.maxRevisionCount
+    ) {
+      nextRoute = "RESEARCH";
+    } else if (
+      data.riskReview &&
+      data.riskReview.decision === "APPROVE" &&
+      (flags.has("UNSUPPORTED_CLAIM") || flags.has("OVERCONFIDENT")) &&
+      data.counters.strategyRevisionCount < EVALUATOR_DEFAULTS.maxRevisionCount
+    ) {
+      nextRoute = "STRATEGIST";
     } else {
       nextRoute = "END";
     }

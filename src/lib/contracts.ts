@@ -371,3 +371,26 @@ export const EvaluatorInputSchema = z
   })
   .strict();
 export type EvaluatorInput = z.infer<typeof EvaluatorInputSchema>;
+
+// Shared graph state from ARCHITECTURE.md section 5. The optional agent outputs
+// accept null as well as undefined, because a revision pass clears them.
+export const OkaneStateSchema = z
+  .object({
+    requestId: z.string().min(1),
+    request: ResearchRequestSchema,
+    marketSnapshot: MarketSnapshotSchema.nullish(),
+    evidence: z.array(EvidenceSchema),
+    researchBrief: ResearchBriefSchema.nullish(),
+    tradeProposal: TradeProposalSchema.nullish(),
+    riskReview: RiskReviewSchema.nullish(),
+    evaluation: EvaluationSchema.nullish(),
+    trace: z.array(TraceEventSchema),
+    routeReason: z.string().min(1).optional(),
+    // Each counter has a maximum of one for the MVP.
+    researchRevisionCount: z.number().int().min(0).max(1),
+    strategyRevisionCount: z.number().int().min(0).max(1),
+    status: RunStatusSchema,
+    errors: z.array(StructuredErrorSchema),
+  })
+  .strict();
+export type OkaneState = z.infer<typeof OkaneStateSchema>;

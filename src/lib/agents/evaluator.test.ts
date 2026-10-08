@@ -207,4 +207,58 @@ describe("Evaluator Agent", () => {
     assert.ok(!result.evaluation.notes.includes("Run used demo data."));
     assert.strictEqual(result.evaluation.nextRoute, "HUMAN_APPROVAL");
   });
+
+  test("16. Same healthy input in fixture mode and provider mode differs only by the demo note", () => {
+    const fixtureInput = buildNormalInput();
+    fixtureInput.brief.dataMode = "fixture";
+    const providerInput = buildNormalInput();
+    providerInput.brief.dataMode = "provider";
+    const fixtureResult = runEvaluatorAgent(fixtureInput);
+    const providerResult = runEvaluatorAgent(providerInput);
+    assert.ok(fixtureResult.ok);
+    assert.ok(providerResult.ok);
+    assert.ok(fixtureResult.evaluation.notes.includes("Run used demo data."));
+    assert.ok(!providerResult.evaluation.notes.includes("Run used demo data."));
+    assert.strictEqual(fixtureResult.evaluation.score, providerResult.evaluation.score);
+    assert.strictEqual(fixtureResult.evaluation.nextRoute, providerResult.evaluation.nextRoute);
+    assert.deepStrictEqual(fixtureResult.evaluation.flags, providerResult.evaluation.flags);
+  });
+
+  test("17. Low quality approved output with a citation gap routes to Research once, then to the end", () => {
+    const build = (researchRevisionCount: number): EvaluatorInput => {
+      const input = buildNormalInput();
+      input.brief.evidence[0].source = " "; // MISSING_CITATION (-20)
+      input.brief.dataQuality = "DEGRADED"; // STALE_DATA (-10)
+      input.brief.confidence = 0.5;
+      input.proposal!.confidence = 0.5;
+      input.timings.push({ agent: "strategist", elapsedMs: 10000 }); // SLOW_RUN (-5)
+      input.counters.researchRevisionCount = researchRevisionCount;
+      return input;
+    };
+    const first = runEvaluatorAgent(build(0));
+    assert.ok(first.ok);
+    assert.ok(first.evaluation.score < 70);
+    assert.strictEqual(first.evaluation.nextRoute, "RESEARCH");
+    const second = runEvaluatorAgent(build(1));
+    assert.ok(second.ok);
+    assert.strictEqual(second.evaluation.nextRoute, "END");
+  });
+
+  test("18. Low quality approved output with an unsupported claim routes to the Strategist once, then to the end", () => {
+    const build = (strategyRevisionCount: number): EvaluatorInput => {
+      const input = buildNormalInput();
+      input.proposal!.rationale = " "; // UNSUPPORTED_CLAIM (-20)
+      input.proposal!.confidence = 1; // OVERCONFIDENT (-15)
+      input.timings.push({ agent: "strategist", elapsedMs: 10000 }); // SLOW_RUN (-5)
+      input.counters.strategyRevisionCount = strategyRevisionCount;
+      return input;
+    };
+    const first = runEvaluatorAgent(build(0));
+    assert.ok(first.ok);
+    assert.ok(first.evaluation.score < 70);
+    assert.strictEqual(first.evaluation.nextRoute, "STRATEGIST");
+    const second = runEvaluatorAgent(build(1));
+    assert.ok(second.ok);
+    assert.strictEqual(second.evaluation.nextRoute, "END");
+  });
 });
