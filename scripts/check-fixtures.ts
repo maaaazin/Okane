@@ -1,13 +1,18 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { FinalResponseSchema } from "../src/lib/contracts";
+import { FinalResponseSchema, MarketSnapshotSchema } from "../src/lib/contracts";
 
-const fixtureNames = ["normal", "insufficient_data"];
+const fixtures = [
+  { name: "normal", schema: FinalResponseSchema },
+  { name: "insufficient_data", schema: FinalResponseSchema },
+  { name: "market_normal", schema: MarketSnapshotSchema },
+  { name: "market_insufficient_data", schema: MarketSnapshotSchema },
+];
 let failed = false;
 
-for (const name of fixtureNames) {
+for (const { name, schema } of fixtures) {
   const path = join("src", "fixtures", `${name}.json`);
-  const parsed = FinalResponseSchema.safeParse(
+  const parsed = schema.safeParse(
     JSON.parse(readFileSync(path, "utf8")) as unknown,
   );
   if (parsed.success) {
