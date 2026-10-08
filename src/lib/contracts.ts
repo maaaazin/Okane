@@ -290,3 +290,65 @@ export const MarketSnapshotSchema = z
     }
   });
 export type MarketSnapshot = z.infer<typeof MarketSnapshotSchema>;
+
+export const ResearchStatusSchema = z.enum(["EVIDENCE_READY", "INSUFFICIENT_EVIDENCE"]);
+export type ResearchStatus = z.infer<typeof ResearchStatusSchema>;
+
+// Where the brief text came from. "none" means no model call was made.
+export const ResearchModelSourceSchema = z.enum(["claude", "mock", "none"]);
+export type ResearchModelSource = z.infer<typeof ResearchModelSourceSchema>;
+
+// The Research Agent output. The source fields are copied from the market
+// snapshot and are absent only when no snapshot could be retrieved at all.
+export const ResearchBriefSchema = z
+  .object({
+    symbol: z.string().min(1),
+    status: ResearchStatusSchema,
+    evidence: z.array(EvidenceSchema),
+    confidence: z.number().min(0).max(1),
+    dataQuality: DataQualitySchema,
+    reasons: z.array(z.string().min(1)).min(1),
+    source: z.string().min(1).optional(),
+    retrievedAt: isoTimestamp.optional(),
+    dataMode: DataModeSchema.optional(),
+    demoLabel: z.string().min(1).optional(),
+    modelSource: ResearchModelSourceSchema,
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (value.dataMode === "fixture" && value.demoLabel === undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["demoLabel"],
+        message: "Fixture data must carry a visible demo label",
+      });
+    }
+    if (value.status === "EVIDENCE_READY") {
+      if (value.evidence.length === 0) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["evidence"],
+          message: "Evidence ready requires at least one evidence item",
+        });
+      }
+      if (value.dataQuality === "INSUFFICIENT") {
+        ctx.addIssue({
+          code: "custom",
+          path: ["dataQuality"],
+          message: "Evidence ready cannot have insufficient data quality",
+        });
+      }
+      if (
+        value.source === undefined ||
+        value.retrievedAt === undefined ||
+        value.dataMode === undefined
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["source"],
+          message: "Evidence ready requires source, retrievedAt and dataMode",
+        });
+      }
+    }
+  });
+export type ResearchBrief = z.infer<typeof ResearchBriefSchema>;
