@@ -352,3 +352,22 @@ export const ResearchBriefSchema = z
     }
   });
 export type ResearchBrief = z.infer<typeof ResearchBriefSchema>;
+
+export const EvaluatorInputSchema = z
+  .object({
+    brief: ResearchBriefSchema,
+    proposal: TradeProposalSchema.nullable(),
+    riskReview: RiskReviewSchema.nullable(),
+    timings: z.array(
+      z.object({
+        agent: AgentNameSchema,
+        elapsedMs: z.number().int().nonnegative(),
+      })
+    ),
+    counters: z.object({
+      researchRevisionCount: z.number().int().nonnegative(),
+      strategyRevisionCount: z.number().int().nonnegative(),
+    }),
+  })
+  .strict();
+export type EvaluatorInput = z.infer<typeof EvaluatorInputSchema>;
