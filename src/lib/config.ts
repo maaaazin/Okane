@@ -53,6 +53,11 @@ export const GRAPH_DEFAULTS = {
   maxStrategyRevisions: 1,
 } as const;
 
+export const TRACE_DEFAULTS = {
+  // The run store keeps this many most recent runs and drops the oldest first.
+  maxRuns: 20,
+} as const;
+
 const API_KEY_VAR = "ANTHROPIC_API_KEY";
 // Existing flag from .env.example. It is a plain boolean, not a secret.
 const DEMO_MODE_VAR = "NEXT_PUBLIC_DEMO_MODE";
