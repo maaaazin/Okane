@@ -20,9 +20,8 @@ The Next.js App Router foundation is implemented under `src/app/`. The homepage 
 
 Before editing, read:
 
-1. `docs/HACKATHON_ISSUES.md` for the assigned issue, dependencies, and acceptance criteria.
-2. `docs/PROJECT_ROADMAP.md` for the full delivery plan and team ownership.
-3. `docs/ARCHITECTURE.md` for the system boundaries, contracts, and routing rules.
+1. `docs/PROJECT_ROADMAP.md` for the full delivery plan and team ownership.
+2. `docs/ARCHITECTURE.md` for the system boundaries, contracts, and routing rules.
 
 ## Team ownership
 

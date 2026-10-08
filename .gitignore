@@ -12,5 +12,4 @@ out/
 # Tooling and system files
 coverage/
 *.tsbuildinfo
-.codebase-memory/
 .DS_Store

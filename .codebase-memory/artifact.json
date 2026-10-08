@@ -1,0 +1,11 @@
+{
+    "schema_version": 2,
+    "commit": "217ef9961138dd223be072aa6e266ade8098d31b",
+    "indexed_at": "2026-10-08T10:08:56Z",
+    "project": "okane",
+    "nodes": 39,
+    "edges": 42,
+    "original_size": 1703936,
+    "compressed_size": 30687,
+    "compression_level": 9
+}

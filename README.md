@@ -1,6 +1,6 @@
 # Okane
 
-The project architecture and agent contracts are in [the architecture guide](docs/ARCHITECTURE.md). Teammate/agent working conventions are in [AGENTS.md](AGENTS.md). Track the six-hour build through the [GitHub issues](https://github.com/maaaazin/Okane/issues).
+The project architecture and agent contracts are in [the architecture guide](docs/ARCHITECTURE.md). Teammate/agent working conventions are in [AGENTS.md](AGENTS.md). Track the build through the [GitHub issues](https://github.com/maaaazin/Okane/issues).
 
 ## Local development
 
