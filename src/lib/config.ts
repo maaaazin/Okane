@@ -29,6 +29,22 @@ export const MARKET_DATA_DEFAULTS = {
   maxStaleDays: 5,
 } as const;
 
+export const EVALUATOR_DEFAULTS = {
+  maxScore: 100,
+  passThreshold: 70,
+  maxTotalMs: 15000,
+  maxAgentMs: 5000,
+  penalties: {
+    MISSING_CITATION: 20,
+    UNSUPPORTED_CLAIM: 20,
+    STALE_DATA: 10,
+    OVERCONFIDENT: 15,
+    THIN_EVIDENCE: 40,
+    SLOW_RUN: 5,
+  },
+  maxRevisionCount: 1,
+} as const;
+
 const API_KEY_VAR = "ANTHROPIC_API_KEY";
 // Existing flag from .env.example. It is a plain boolean, not a secret.
 const DEMO_MODE_VAR = "NEXT_PUBLIC_DEMO_MODE";
