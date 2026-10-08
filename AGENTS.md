@@ -99,7 +99,7 @@ src/
     paper-trades.ts             # approval-gated persistence interface
   fixtures/
     normal.json
-    insufficient-data.json
+    insufficient_data.json
 ```
 
 ## Implementation conventions
