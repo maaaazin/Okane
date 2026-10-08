@@ -1,8 +1,6 @@
 # Okane
 
-CA3 planning, build stages, agent contracts, and team collaboration guidance are in [the project roadmap](docs/PROJECT_ROADMAP.md).
-
-For the six-hour build, use the [PR-sized GitHub issue backlog](docs/HACKATHON_ISSUES.md).
+The project architecture and agent contracts are in [the architecture guide](docs/ARCHITECTURE.md). Teammate/agent working conventions are in [AGENTS.md](AGENTS.md). Track the six-hour build through the [GitHub issues](https://github.com/maaaazin/Okane/issues).
 
 ## Local development
 
