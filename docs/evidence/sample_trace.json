@@ -1,0 +1,50 @@
+[
+  {
+    "runId": "run_2026-10-08_3b0c5873",
+    "at": "2026-10-08T17:51:51.829Z",
+    "agent": "research",
+    "event": "completed",
+    "inputSummary": "RELIANCE.NS, 5 days, paper mode",
+    "outputSummary": "EVIDENCE_READY, 3 evidence items, quality GOOD, model mock",
+    "routeReason": "Evidence is usable, hand off to the Strategist",
+    "elapsedMs": 3,
+    "dataMode": "fixture",
+    "error": null
+  },
+  {
+    "runId": "run_2026-10-08_3b0c5873",
+    "at": "2026-10-08T17:51:51.835Z",
+    "agent": "strategist",
+    "event": "completed",
+    "inputSummary": "3 evidence items",
+    "outputSummary": "BUY 1178 target 1225.12 stop 1154.44",
+    "routeReason": "Proposal is complete, hand off to the Risk Guardrail",
+    "elapsedMs": 2,
+    "dataMode": "fixture",
+    "error": null
+  },
+  {
+    "runId": "run_2026-10-08_3b0c5873",
+    "at": "2026-10-08T17:51:51.837Z",
+    "agent": "risk_guardrail",
+    "event": "completed",
+    "inputSummary": "BUY proposal for RELIANCE.NS",
+    "outputSummary": "APPROVE: 424 shares, risk to reward 2",
+    "routeReason": "Risk Guardrail approved the proposal, hand off to the Evaluator",
+    "elapsedMs": 1,
+    "dataMode": "fixture",
+    "error": null
+  },
+  {
+    "runId": "run_2026-10-08_3b0c5873",
+    "at": "2026-10-08T17:51:51.841Z",
+    "agent": "evaluator",
+    "event": "routed",
+    "inputSummary": "Proposal, risk review and evidence",
+    "outputSummary": "Score 100, route HUMAN_APPROVAL",
+    "routeReason": "Evaluator permitted human approval (score 100, flags: none)",
+    "elapsedMs": 3,
+    "dataMode": "fixture",
+    "error": null
+  }
+]

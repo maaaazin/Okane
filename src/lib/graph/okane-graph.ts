@@ -7,7 +7,6 @@ import {
   EvaluatorInputSchema,
   ResearchRequestSchema,
   RiskReviewSchema,
-  TraceEventSchema,
   type AgentName,
   type DataMode,
   type EvaluatorInput,
@@ -34,6 +33,8 @@ import {
   routeAfterStrategist,
   type RouteDecision,
 } from "@/lib/graph/routing";
+import { buildTraceEvent } from "@/lib/trace/run-trace";
+import { saveRunTrace } from "@/lib/trace/trace-store";
 import { OkaneGraphState, type OkaneGraphStateType, type OkaneGraphUpdate } from "@/lib/graph/state";
 
 // The Okane LangGraph. Nodes call the existing agents and write the route
@@ -118,7 +119,7 @@ function makeNode(
     const elapsed = () => Math.max(0, Math.round(runtime.timer() - startedAt));
     try {
       const outcome = await body(state);
-      const event = TraceEventSchema.parse({
+      const event = buildTraceEvent({
         runId: state.requestId,
         at: runtime.clock().toISOString(),
         agent,
@@ -140,7 +141,7 @@ function makeNode(
     } catch {
       const error = unexpectedError(agent);
       const reason = `The ${agent} step failed unexpectedly, the run closes with a structured error`;
-      const event = TraceEventSchema.parse({
+      const event = buildTraceEvent({
         runId: state.requestId,
         at: runtime.clock().toISOString(),
         agent,
@@ -435,6 +436,9 @@ export async function runOkaneGraph(
       { requestId, request: parsedRequest.data },
       { recursionLimit: GRAPH_DEFAULTS.recursionLimit },
     );
+
+    // Every run is stored, including NO_TRADE and ERROR runs.
+    saveRunTrace(requestId, finalState.trace);
 
     if (finalState.status === "ERROR") {
       return {

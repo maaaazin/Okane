@@ -70,8 +70,11 @@ export function runEvaluatorAgent(
     const isBriefConfValid =
       typeof briefConf === "number" && !isNaN(briefConf) && briefConf >= 0 && briefConf <= 1;
 
+    // Adjusted for edge cases: a malformed confidence value is a data problem, not
+    // overconfidence, so it adds a note and closes the run without a flag or penalty.
     if (!isBriefConfValid) {
-      flags.add("OVERCONFIDENT");
+      notes.push("Research confidence value is malformed.");
+      isInvalid = true;
     }
 
     if (data.proposal) {
@@ -80,7 +83,8 @@ export function runEvaluatorAgent(
         typeof propConf === "number" && !isNaN(propConf) && propConf >= 0 && propConf <= 1;
 
       if (!isPropConfValid) {
-        flags.add("OVERCONFIDENT");
+        notes.push("Proposal confidence value is malformed.");
+        isInvalid = true;
       } else {
         if (isBriefConfValid && propConf > briefConf) {
           flags.add("OVERCONFIDENT");
@@ -109,7 +113,12 @@ export function runEvaluatorAgent(
       }
     }
 
-    if (missingTimings || totalElapsed > EVALUATOR_DEFAULTS.maxTotalMs) {
+    // Adjusted for edge cases: missing timings only add a note. SLOW_RUN is kept
+    // for a time limit that was actually exceeded.
+    if (missingTimings) {
+      notes.push("Timing data is missing or malformed.");
+    }
+    if (totalElapsed > EVALUATOR_DEFAULTS.maxTotalMs) {
       flags.add("SLOW_RUN");
     }
 
@@ -117,6 +126,11 @@ export function runEvaluatorAgent(
     if (data.proposal && !data.riskReview) {
       notes.push("Missing risk review for proposal.");
       isInvalid = true; // Incomplete risk review while proposal exists is invalid
+    }
+    if (!data.proposal && data.riskReview && data.riskReview.decision === "APPROVE") {
+      // Adjusted for edge cases: an approval with nothing to approve never reaches a human.
+      notes.push("Risk review approved but no proposal exists.");
+      isInvalid = true;
     }
 
     // Score Calculation
