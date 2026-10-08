@@ -8,15 +8,19 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "check:fixtures": "tsx scripts/check-fixtures.ts"
+    "check:fixtures": "tsx scripts/check-fixtures.ts",
+    "test": "tsx --conditions=react-server --test src/lib/safe-model.test.ts"
   },
   "engines": {
     "node": ">=20.9.0"
   },
   "dependencies": {
+    "@langchain/anthropic": "1.5.12",
+    "@langchain/core": "1.2.17",
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",
+    "server-only": "0.0.1",
     "zod": "4.6.5"
   },
   "devDependencies": {
