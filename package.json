@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "check:fixtures": "tsx scripts/check-fixtures.ts",
-    "test": "tsx --conditions=react-server --test src/lib/safe-model.test.ts src/lib/data/market-data.test.ts src/lib/agents/research.test.ts src/lib/agents/strategist.test.ts src/lib/agents/evaluator.test.ts"
+    "test": "tsx --conditions=react-server --test src/lib/safe-model.test.ts src/lib/data/market-data.test.ts src/lib/agents/research.test.ts src/lib/agents/strategist.test.ts src/lib/agents/risk.test.ts src/lib/agents/evaluator.test.ts"
   },
   "engines": {
     "node": ">=20.9.0"
