@@ -1,0 +1,134 @@
+{
+  "requestId": "run_2026-10-08_001",
+  "asOf": "2026-10-08",
+  "dataMode": "fixture",
+  "demoLabel": "DEMO DATA: dated cached fixture, illustrative figures, not live market data",
+  "request": {
+    "symbol": "RELIANCE.NS",
+    "horizonDays": 5,
+    "portfolioValueInr": 1000000,
+    "thesis": "Momentum continuation after a volume backed breakout",
+    "mode": "paper"
+  },
+  "status": "AWAITING_HUMAN_APPROVAL",
+  "approvalStatus": "PENDING_HUMAN",
+  "dataQuality": "GOOD",
+  "evidence": [
+    {
+      "id": "ev_001",
+      "source": "Okane demo fixture: daily price history",
+      "summary": "Closed at 1450.00, above the 20 day average of 1418.50 for a third session.",
+      "asOf": "2026-10-08",
+      "retrievedAt": "2026-10-08T09:55:00.000Z",
+      "quality": "HIGH"
+    },
+    {
+      "id": "ev_002",
+      "source": "Okane demo fixture: volume statistics",
+      "summary": "Volume was 1.4 times the 20 day average on the breakout session.",
+      "asOf": "2026-10-08",
+      "retrievedAt": "2026-10-08T09:55:00.000Z",
+      "quality": "HIGH"
+    },
+    {
+      "id": "ev_003",
+      "source": "Okane demo fixture: curated news summary",
+      "summary": "No adverse company announcement in the last five sessions.",
+      "asOf": "2026-10-07",
+      "retrievedAt": "2026-10-08T09:55:00.000Z",
+      "quality": "MEDIUM"
+    }
+  ],
+  "tradeProposal": {
+    "symbol": "RELIANCE.NS",
+    "direction": "BUY",
+    "entry": 1450,
+    "target": 1510,
+    "stop": 1420,
+    "horizonDays": 5,
+    "rationale": "Price holds above the 20 day average with above average volume. The idea is invalid if price closes below 1420.",
+    "confidence": 0.62,
+    "evidenceIds": ["ev_001", "ev_002", "ev_003"]
+  },
+  "riskReview": {
+    "decision": "APPROVE",
+    "positionSizeShares": 333,
+    "maxLossInr": 9990,
+    "riskRewardRatio": 2,
+    "reasons": [
+      "Stop distance is 30.00 INR, which is positive and within limits.",
+      "Risk per trade is 1 percent of portfolio value.",
+      "Risk to reward is 2.0, above the 1.5 minimum."
+    ]
+  },
+  "evaluation": {
+    "score": 82,
+    "flags": [],
+    "nextRoute": "HUMAN_APPROVAL",
+    "notes": "Every claim cites an evidence item, data is fresh for the as of date, and confidence is moderate."
+  },
+  "trace": [
+    {
+      "runId": "run_2026-10-08_001",
+      "at": "2026-10-08T10:00:00.000Z",
+      "agent": "request_validator",
+      "event": "completed",
+      "inputSummary": "RELIANCE.NS, 5 days, paper mode",
+      "outputSummary": "Request is valid",
+      "routeReason": "Valid input proceeds to Research",
+      "elapsedMs": 3,
+      "dataMode": "fixture",
+      "error": null
+    },
+    {
+      "runId": "run_2026-10-08_001",
+      "at": "2026-10-08T10:00:01.200Z",
+      "agent": "research",
+      "event": "completed",
+      "inputSummary": "Fetch snapshot for RELIANCE.NS",
+      "outputSummary": "3 evidence items, quality GOOD",
+      "routeReason": "Evidence is usable, hand off to Strategist",
+      "elapsedMs": 1180,
+      "dataMode": "fixture",
+      "error": null
+    },
+    {
+      "runId": "run_2026-10-08_001",
+      "at": "2026-10-08T10:00:03.000Z",
+      "agent": "strategist",
+      "event": "completed",
+      "inputSummary": "3 evidence items and request constraints",
+      "outputSummary": "BUY 1450 target 1510 stop 1420",
+      "routeReason": "Proposal is complete, hand off to Risk Guardrail",
+      "elapsedMs": 1790,
+      "dataMode": "fixture",
+      "error": null
+    },
+    {
+      "runId": "run_2026-10-08_001",
+      "at": "2026-10-08T10:00:03.250Z",
+      "agent": "risk_guardrail",
+      "event": "completed",
+      "inputSummary": "BUY proposal for RELIANCE.NS",
+      "outputSummary": "APPROVE: 333 shares, risk to reward 2.0",
+      "routeReason": "Stop distance, size and risk to reward all within limits",
+      "elapsedMs": 246,
+      "dataMode": "fixture",
+      "error": null
+    },
+    {
+      "runId": "run_2026-10-08_001",
+      "at": "2026-10-08T10:00:04.600Z",
+      "agent": "evaluator",
+      "event": "completed",
+      "inputSummary": "Proposal, risk review and evidence",
+      "outputSummary": "Score 82, no flags",
+      "routeReason": "Quality is sufficient, permit human approval",
+      "elapsedMs": 1340,
+      "dataMode": "fixture",
+      "error": null
+    }
+  ],
+  "errors": [],
+  "disclaimer": "Educational paper trading research only. Not financial advice. No real orders are placed."
+}

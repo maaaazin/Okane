@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:fixtures": "tsx scripts/check-fixtures.ts"
   },
   "engines": {
     "node": ">=20.9.0"
@@ -15,7 +16,8 @@
   "dependencies": {
     "next": "latest",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@types/node": "latest",
@@ -23,6 +25,7 @@
     "@types/react-dom": "latest",
     "eslint": "latest",
     "eslint-config-next": "latest",
+    "tsx": "4.23.15",
     "typescript": "latest"
   }
 }

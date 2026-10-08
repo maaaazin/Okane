@@ -1,0 +1,80 @@
+{
+  "requestId": "run_2026-10-08_002",
+  "asOf": "2026-10-08",
+  "dataMode": "fixture",
+  "demoLabel": "DEMO DATA: dated cached fixture, illustrative figures, not live market data",
+  "request": {
+    "symbol": "TCS.NS",
+    "horizonDays": 3,
+    "portfolioValueInr": 1000000,
+    "mode": "paper"
+  },
+  "status": "INSUFFICIENT_EVIDENCE",
+  "approvalStatus": "NOT_APPLICABLE",
+  "dataQuality": "INSUFFICIENT",
+  "evidence": [
+    {
+      "id": "ev_001",
+      "source": "Okane demo fixture: daily price history",
+      "summary": "Only 2 sessions of price history are available, and the latest is 9 days old.",
+      "asOf": "2026-09-29",
+      "retrievedAt": "2026-10-08T09:55:00.000Z",
+      "quality": "LOW"
+    }
+  ],
+  "riskReview": {
+    "decision": "REJECT",
+    "positionSizeShares": 0,
+    "maxLossInr": 0,
+    "riskRewardRatio": null,
+    "reasons": [
+      "No trade proposal exists because the evidence was too thin and stale to support one."
+    ]
+  },
+  "evaluation": {
+    "score": 20,
+    "flags": ["STALE_DATA", "THIN_EVIDENCE"],
+    "nextRoute": "END",
+    "notes": "No recommendation is the correct outcome. The run ends without a proposal."
+  },
+  "trace": [
+    {
+      "runId": "run_2026-10-08_002",
+      "at": "2026-10-08T11:00:00.000Z",
+      "agent": "request_validator",
+      "event": "completed",
+      "inputSummary": "TCS.NS, 3 days, paper mode",
+      "outputSummary": "Request is valid",
+      "routeReason": "Valid input proceeds to Research",
+      "elapsedMs": 2,
+      "dataMode": "fixture",
+      "error": null
+    },
+    {
+      "runId": "run_2026-10-08_002",
+      "at": "2026-10-08T11:00:01.000Z",
+      "agent": "research",
+      "event": "completed",
+      "inputSummary": "Fetch snapshot for TCS.NS",
+      "outputSummary": "1 stale evidence item, quality INSUFFICIENT",
+      "routeReason": "Data is stale and thin, terminate with INSUFFICIENT_EVIDENCE",
+      "elapsedMs": 950,
+      "dataMode": "fixture",
+      "error": null
+    },
+    {
+      "runId": "run_2026-10-08_002",
+      "at": "2026-10-08T11:00:01.400Z",
+      "agent": "evaluator",
+      "event": "routed",
+      "inputSummary": "Insufficient evidence outcome",
+      "outputSummary": "Score 20, route END",
+      "routeReason": "No proposal to review, close the run without a trade",
+      "elapsedMs": 400,
+      "dataMode": "fixture",
+      "error": null
+    }
+  ],
+  "errors": [],
+  "disclaimer": "Educational paper trading research only. Not financial advice. No real orders are placed."
+}
