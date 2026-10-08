@@ -261,4 +261,78 @@ describe("Evaluator Agent", () => {
     assert.ok(second.ok);
     assert.strictEqual(second.evaluation.nextRoute, "END");
   });
+
+  test("19. Adjusted for edge cases: APPROVE with a null proposal routes to the end with a note and no flag", () => {
+    const input = buildNormalInput();
+    input.proposal = null;
+    const result = runEvaluatorAgent(input);
+    assert.ok(result.ok);
+    assert.strictEqual(result.evaluation.nextRoute, "END");
+    assert.notStrictEqual(result.evaluation.nextRoute, "HUMAN_APPROVAL");
+    assert.strictEqual(result.evaluation.flags.length, 0);
+    assert.strictEqual(result.evaluation.score, 100);
+    assert.ok(result.evaluation.notes.includes("no proposal exists"));
+  });
+
+  test("20. Adjusted for edge cases: empty timings add a note, no SLOW_RUN flag, and leave the route unchanged", () => {
+    const input = buildNormalInput();
+    input.timings = [];
+    const result = runEvaluatorAgent(input);
+    assert.ok(result.ok);
+    assert.ok(!result.evaluation.flags.includes("SLOW_RUN"));
+    assert.ok(result.evaluation.notes.includes("Timing data is missing"));
+    assert.strictEqual(result.evaluation.score, 100);
+    assert.strictEqual(result.evaluation.nextRoute, "HUMAN_APPROVAL");
+  });
+
+  test("21. Adjusted for edge cases: malformed confidence never produces an OVERCONFIDENT flag or an approval", () => {
+    // The input schema rejects these values before any check runs, so the
+    // evaluator returns a structured error and the run cannot reach a human.
+    for (const bad of [Number.NaN, -0.1, 1.5]) {
+      const input = buildNormalInput();
+      input.proposal!.confidence = bad;
+      const result = runEvaluatorAgent(input);
+      assert.ok(!result.ok);
+      assert.strictEqual(result.error.code, "INVALID_INPUT");
+    }
+    const input = buildNormalInput();
+    input.brief.confidence = Number.NaN;
+    assert.ok(!runEvaluatorAgent(input).ok);
+  });
+
+  test("22. REJECT on healthy evidence routes to the end", () => {
+    const input = buildNormalInput();
+    input.riskReview!.decision = "REJECT";
+    const result = runEvaluatorAgent(input);
+    assert.ok(result.ok);
+    assert.strictEqual(result.evaluation.nextRoute, "END");
+    assert.strictEqual(result.evaluation.flags.length, 0);
+  });
+
+  test("23. OVERCONFIDENT alone keeps the score above the pass threshold, so it does not trigger a revision", () => {
+    const build = (strategyRevisionCount: number): EvaluatorInput => {
+      const input = buildNormalInput();
+      input.brief.confidence = 0.5;
+      input.proposal!.confidence = 0.8;
+      input.counters.strategyRevisionCount = strategyRevisionCount;
+      return input;
+    };
+    for (const count of [0, 1]) {
+      const result = runEvaluatorAgent(build(count));
+      assert.ok(result.ok);
+      assert.deepStrictEqual(result.evaluation.flags, ["OVERCONFIDENT"]);
+      assert.strictEqual(result.evaluation.score, 85);
+      assert.strictEqual(result.evaluation.nextRoute, "HUMAN_APPROVAL");
+    }
+  });
+
+  test("24. The Evaluator does not mutate its input", () => {
+    const input = buildNormalInput();
+    input.brief.confidence = 0.5;
+    input.proposal!.confidence = 0.8;
+    input.timings.push({ agent: "strategist", elapsedMs: 10000 });
+    const before = structuredClone(input);
+    runEvaluatorAgent(input);
+    assert.deepStrictEqual(input, before);
+  });
 });
