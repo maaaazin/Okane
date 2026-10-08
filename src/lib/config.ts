@@ -14,6 +14,21 @@ export const MODEL_DEFAULTS = {
   maxTokens: 2048,
 } as const;
 
+export const MARKET_DATA_DEFAULTS = {
+  // Per attempt timeout for the provider call.
+  timeoutMs: 8_000,
+  // In memory cache lifetime per symbol.
+  cacheTtlMs: 5 * 60_000,
+  // Daily bars requested from the provider.
+  range: "1mo",
+  // Below this many bars the data is unusable and the adapter returns INSUFFICIENT_DATA.
+  minBars: 10,
+  // At or above this many bars, and not stale, quality is GOOD.
+  goodBars: 15,
+  // Latest bar older than this many calendar days downgrades quality to DEGRADED.
+  maxStaleDays: 5,
+} as const;
+
 const API_KEY_VAR = "ANTHROPIC_API_KEY";
 // Existing flag from .env.example. It is a plain boolean, not a secret.
 const DEMO_MODE_VAR = "NEXT_PUBLIC_DEMO_MODE";

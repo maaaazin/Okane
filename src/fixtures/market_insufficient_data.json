@@ -1,0 +1,40 @@
+{
+  "symbol": "RELIANCE.NS",
+  "exchange": "NSE",
+  "currency": "INR",
+  "quotePrice": 1178,
+  "source": "Okane demo fixture (cached Yahoo Finance chart response, unofficial, delayed)",
+  "retrievedAt": "2026-10-08T10:00:00.000Z",
+  "dataMode": "fixture",
+  "freshness": "fixture",
+  "demoLabel": "DEMO DATA: dated cached fixture, not live market data",
+  "asOf": "2026-10-08",
+  "fromCache": false,
+  "dataQuality": "INSUFFICIENT",
+  "bars": [
+    {
+      "date": "2026-10-06",
+      "open": 1188.1,
+      "high": 1219.1,
+      "low": 1188.1,
+      "close": 1218,
+      "volume": 18003127
+    },
+    {
+      "date": "2026-10-07",
+      "open": 1212,
+      "high": 1220.8,
+      "low": 1203.5,
+      "close": 1207.7,
+      "volume": 11880731
+    },
+    {
+      "date": "2026-10-08",
+      "open": 1207.7,
+      "high": 1208,
+      "low": 1173,
+      "close": 1178,
+      "volume": 13949326
+    }
+  ]
+}

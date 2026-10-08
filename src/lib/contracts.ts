@@ -215,3 +215,78 @@ export const FinalResponseSchema = z
     }
   });
 export type FinalResponse = z.infer<typeof FinalResponseSchema>;
+
+export const FreshnessSchema = z.enum(["delayed", "end_of_day", "fixture", "real_time"]);
+export type Freshness = z.infer<typeof FreshnessSchema>;
+
+export const OhlcBarSchema = z
+  .object({
+    date: isoDate,
+    open: z.number().positive(),
+    high: z.number().positive(),
+    low: z.number().positive(),
+    close: z.number().positive(),
+    volume: z.number().int().nonnegative(),
+  })
+  .strict();
+export type OhlcBar = z.infer<typeof OhlcBarSchema>;
+
+export const MarketSnapshotSchema = z
+  .object({
+    symbol: z.string().min(1),
+    exchange: z.string().min(1),
+    currency: z.string().min(1),
+    bars: z.array(OhlcBarSchema),
+    quotePrice: z.number().positive(),
+    source: z.string().min(1),
+    retrievedAt: isoTimestamp,
+    dataMode: DataModeSchema,
+    dataQuality: DataQualitySchema,
+    // Never defaults. "real_time" is only accepted with the explicit flag below.
+    freshness: FreshnessSchema,
+    realTimeEntitlementVerified: z.literal(true).optional(),
+    // Fixture data carries a visible label and the date it was captured.
+    demoLabel: z.string().min(1).optional(),
+    asOf: isoDate.optional(),
+    fromCache: z.boolean(),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (value.freshness === "real_time" && value.realTimeEntitlementVerified !== true) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["freshness"],
+        message: "real_time freshness requires realTimeEntitlementVerified",
+      });
+    }
+    if (value.dataMode === "fixture") {
+      if (value.freshness !== "fixture") {
+        ctx.addIssue({
+          code: "custom",
+          path: ["freshness"],
+          message: "Fixture data must have fixture freshness",
+        });
+      }
+      if (value.demoLabel === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["demoLabel"],
+          message: "Fixture data must carry a visible demo label",
+        });
+      }
+      if (value.asOf === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["asOf"],
+          message: "Fixture data must carry an as of date",
+        });
+      }
+    } else if (value.freshness === "fixture") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["freshness"],
+        message: "Fixture freshness requires fixture data mode",
+      });
+    }
+  });
+export type MarketSnapshot = z.infer<typeof MarketSnapshotSchema>;
