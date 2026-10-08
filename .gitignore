@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Environment files (the template is intentionally committed)
+.env*
+!.env.example
+
+# Tooling and system files
+coverage/
+*.tsbuildinfo
+.codebase-memory/
+.DS_Store
