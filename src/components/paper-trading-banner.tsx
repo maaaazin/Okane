@@ -1,4 +1,5 @@
 import { PAPER_TRADE_LABEL, type ApprovalStatus, type PaperTrade, type RunStatus } from "@/lib/contracts";
+import { formatDateTime } from "@/components/format-date";
 
 export const PAPER_TRADING_BANNER =
   "Paper trading, educational only. No real orders and no real money.";
@@ -30,7 +31,7 @@ export function PaperTradeReceipt({ trade }: { trade: PaperTrade }) {
         <div><dt>Target</dt><dd>₹{trade.target.toFixed(2)}</dd></div>
         <div><dt>Stop loss</dt><dd>₹{trade.stop.toFixed(2)}</dd></div>
         <div><dt>Size</dt><dd>{trade.positionSizeShares} shares</dd></div>
-        <div><dt>Approved at</dt><dd>{new Date(trade.approvedAt).toLocaleString()}</dd></div>
+        <div><dt>Approved at</dt><dd>{formatDateTime(trade.approvedAt)}</dd></div>
         <div><dt>Data</dt><dd>{trade.dataMode} · {trade.source}</dd></div>
       </dl>
       <p className="disclaimer">{PAPER_TRADE_LABEL}</p>
@@ -51,7 +52,7 @@ export function PaperTradeList({ trades }: { trades: readonly PaperTrade[] }) {
               <p>
                 {trade.symbol} · {trade.direction} · {trade.positionSizeShares} shares · entry ₹{trade.entry.toFixed(2)}
               </p>
-              <span>{trade.id} · {new Date(trade.approvedAt).toLocaleString()} · {trade.label}</span>
+              <span>{trade.id} · {formatDateTime(trade.approvedAt)} · {trade.label}</span>
             </li>
           ))}
         </ul>

@@ -5,18 +5,11 @@ import {
   MarketSnapshotSchema,
   type DemoScenario,
   type ResearchRequest,
-  type RiskReview,
-  type TradeProposal,
 } from "@/lib/contracts";
 import marketInsufficient from "@/fixtures/market_insufficient_data.json";
 import marketNormal from "@/fixtures/market_normal.json";
 import { runResearchAgent } from "@/lib/agents/research";
-import {
-  RISK_LIMITS,
-  calculatePositionSize,
-  calculateStopDistance,
-  runRiskGuardrail,
-} from "@/lib/agents/risk";
+import { runStrategistAgent } from "@/lib/agents/strategist";
 import {
   runOkaneGraph,
   type GraphAgents,
@@ -30,9 +23,6 @@ import { invokeModelSafely } from "@/lib/safe-model";
 // labelled fixture, never from a provider. The browser sends only the scenario
 // name; nothing in this file accepts prices or agent outputs from a caller.
 
-const SCRIPTED_LABEL = "Scripted demo scenario";
-const SCRIPTED_RISK_REWARD = 1.2;
-
 function fixtureResearch(market: unknown): GraphAgents["research"] {
   const snapshot = MarketSnapshotSchema.parse(market);
   return (request, observeSnapshot) => {
@@ -44,26 +34,29 @@ function fixtureResearch(market: unknown): GraphAgents["research"] {
   };
 }
 
-// The only scripted piece. The first review asks for one revision; every later
-// review comes from the real Risk Guardrail. Sizing uses the real calculations.
-// The route reason of the REVISE row carries the scripted label, because the
-// graph builds that text from the review reasons.
-function scriptedRisk(): GraphAgents["risk"] {
+// The only scripted piece, and only for the risk revision scenario. The first
+// Strategist call returns a deliberately weak proposal: the same direction,
+// entry and stop as the real one, with a target pulled in so the real risk to
+// reward is about 1.2. Nothing is scripted in Risk. The real Risk Guardrail
+// returns REVISE, the Strategist runs again for real, and Risk approves the
+// normal proposal. The label travels in the Strategist route reason.
+const WEAK_RISK_REWARD = 1.2;
+const WEAK_PROPOSAL_NOTE = "Scripted demo scenario: first proposal is deliberately weak";
+
+function weakFirstStrategist(): GraphAgents["strategist"] {
   let calls = 0;
-  return (proposal: TradeProposal, portfolioValueInr: number): RiskReview => {
+  return async (request, brief) => {
     calls += 1;
-    if (calls > 1) return runRiskGuardrail(proposal, portfolioValueInr);
-    const stopDistance = calculateStopDistance(proposal.entry, proposal.stop);
-    const sizing = calculatePositionSize(portfolioValueInr, stopDistance);
+    const result = await runStrategistAgent(request, brief);
+    if (calls > 1 || !result.ok || result.kind !== "PROPOSAL") return result;
+    const { proposal } = result;
+    const risk = Math.abs(proposal.entry - proposal.stop);
+    const move = Math.round(risk * WEAK_RISK_REWARD * 100) / 100;
+    const target = proposal.direction === "BUY" ? proposal.entry + move : proposal.entry - move;
     return {
-      decision: "REVISE",
-      positionSizeShares: sizing?.positionSizeShares ?? 0,
-      maxLossInr: sizing?.maxLossInr ?? 0,
-      riskRewardRatio: SCRIPTED_RISK_REWARD,
-      reasons: [
-        `${SCRIPTED_LABEL}: risk to reward ${SCRIPTED_RISK_REWARD.toFixed(2)} is below the ${RISK_LIMITS.minRiskRewardRatio.toFixed(1)} minimum`,
-        "Revise entry, target, or stop before this paper-trade hypothesis can proceed",
-      ],
+      ...result,
+      proposal: { ...proposal, target: Math.round(target * 100) / 100 },
+      note: WEAK_PROPOSAL_NOTE,
     };
   };
 }
@@ -75,7 +68,7 @@ function agentsFor(scenario: DemoScenario): Partial<GraphAgents> {
     case "insufficient_data":
       return { research: fixtureResearch(marketInsufficient) };
     case "risk_revision":
-      return { research: fixtureResearch(marketNormal), risk: scriptedRisk() };
+      return { research: fixtureResearch(marketNormal), strategist: weakFirstStrategist() };
   }
 }
 

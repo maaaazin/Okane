@@ -309,7 +309,7 @@ describe("Evaluator Agent", () => {
     assert.strictEqual(result.evaluation.flags.length, 0);
   });
 
-  test("23. OVERCONFIDENT alone keeps the score above the pass threshold, so it does not trigger a revision", () => {
+  test("23. OVERCONFIDENT alone scores above the pass threshold, and still gets one Strategist revision before approval", () => {
     const build = (strategyRevisionCount: number): EvaluatorInput => {
       const input = buildNormalInput();
       input.brief.confidence = 0.5;
@@ -317,13 +317,83 @@ describe("Evaluator Agent", () => {
       input.counters.strategyRevisionCount = strategyRevisionCount;
       return input;
     };
-    for (const count of [0, 1]) {
+    const expected = ["STRATEGIST", "HUMAN_APPROVAL"];
+    [0, 1].forEach((count, index) => {
       const result = runEvaluatorAgent(build(count));
       assert.ok(result.ok);
       assert.deepStrictEqual(result.evaluation.flags, ["OVERCONFIDENT"]);
       assert.strictEqual(result.evaluation.score, 85);
-      assert.strictEqual(result.evaluation.nextRoute, "HUMAN_APPROVAL");
+      assert.strictEqual(result.evaluation.nextRoute, expected[index]);
+    });
+  });
+
+  test("23b. A single flag routes to its revision stage at counter 0 and falls back to the score rule at counter 1", () => {
+    const cases: Array<{
+      flag: string;
+      apply: (input: EvaluatorInput) => void;
+      counter: "researchRevisionCount" | "strategyRevisionCount";
+      route: string;
+      score: number;
+    }> = [
+      {
+        flag: "MISSING_CITATION",
+        apply: (input) => {
+          input.brief.evidence[0].source = " ";
+        },
+        counter: "researchRevisionCount",
+        route: "RESEARCH",
+        score: 80,
+      },
+      {
+        flag: "UNSUPPORTED_CLAIM",
+        apply: (input) => {
+          input.proposal!.rationale = " ";
+        },
+        counter: "strategyRevisionCount",
+        route: "STRATEGIST",
+        score: 80,
+      },
+      {
+        flag: "OVERCONFIDENT",
+        apply: (input) => {
+          input.brief.confidence = 0.5;
+          input.proposal!.confidence = 0.8;
+        },
+        counter: "strategyRevisionCount",
+        route: "STRATEGIST",
+        score: 85,
+      },
+    ];
+    for (const item of cases) {
+      for (const count of [0, 1]) {
+        const input = buildNormalInput();
+        item.apply(input);
+        input.counters[item.counter] = count;
+        const result = runEvaluatorAgent(input);
+        assert.ok(result.ok, item.flag);
+        assert.deepStrictEqual(result.evaluation.flags, [item.flag]);
+        assert.strictEqual(result.evaluation.score, item.score);
+        assert.strictEqual(
+          result.evaluation.nextRoute,
+          count === 0 ? item.route : "HUMAN_APPROVAL",
+          `${item.flag} at counter ${count}`,
+        );
+      }
     }
+  });
+
+  test("23c. A flag does not revise when Risk did not approve, and a clean run is unchanged", () => {
+    const rejected = buildNormalInput();
+    rejected.brief.evidence[0].source = " ";
+    rejected.riskReview!.decision = "REJECT";
+    const rejectedResult = runEvaluatorAgent(rejected);
+    assert.ok(rejectedResult.ok);
+    assert.strictEqual(rejectedResult.evaluation.nextRoute, "END");
+
+    const clean = runEvaluatorAgent(buildNormalInput());
+    assert.ok(clean.ok);
+    assert.strictEqual(clean.evaluation.score, 100);
+    assert.strictEqual(clean.evaluation.nextRoute, "HUMAN_APPROVAL");
   });
 
   test("24. The Evaluator does not mutate its input", () => {

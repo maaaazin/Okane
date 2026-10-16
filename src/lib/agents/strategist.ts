@@ -55,7 +55,14 @@ export const StrategistModelOutputSchema = z
 export type StrategistModelOutput = z.infer<typeof StrategistModelOutputSchema>;
 
 export type StrategistAgentResult =
-  | { ok: true; kind: "PROPOSAL"; proposal: TradeProposal; modelSource: ModelSource }
+  | {
+      ok: true;
+      kind: "PROPOSAL";
+      proposal: TradeProposal;
+      modelSource: ModelSource;
+      // Optional text the graph adds to the route reason, used to label scripted demo output.
+      note?: string;
+    }
   | {
       ok: true;
       kind: "NO_TRADE";

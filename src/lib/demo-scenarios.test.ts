@@ -89,15 +89,23 @@ describe("demo scenarios", () => {
     assert.deepEqual(buildRoutePath(response.trace, response.status), ["Research"]);
   });
 
-  it("2. the risk revision scenario ends with one revision, REVISE then APPROVE, and a valid response", async () => {
+  it("2. the risk revision scenario scripts only a weak first proposal; the real Risk Guardrail revises, then approves", async () => {
     const response = await runScenario("risk_revision");
     const riskEvents = response.trace.filter((event) => event.agent === "risk_guardrail");
     const strategistEvents = response.trace.filter((event) => event.agent === "strategist");
+    assert.equal(response.trace.length, 6);
     assert.equal(strategistEvents.length, 2);
     assert.equal(riskEvents.length, 2);
-    assert.match(riskEvents[0].outputSummary, /^REVISE/);
-    assert.match(riskEvents[1].outputSummary, /^APPROVE/);
-    assert.match(riskEvents[0].routeReason, /Scripted demo scenario/);
+    // Strategist: first weak, then the normal proposal, so the numbers differ.
+    assert.match(strategistEvents[0].outputSummary, /BUY 1178 target 1206\.27 stop 1154\.44/);
+    assert.match(strategistEvents[1].outputSummary, /BUY 1178 target 1225\.12 stop 1154\.44/);
+    assert.notEqual(strategistEvents[0].outputSummary, strategistEvents[1].outputSummary);
+    assert.match(strategistEvents[0].routeReason, /Scripted demo scenario: first proposal is deliberately weak/);
+    assert.doesNotMatch(strategistEvents[1].routeReason, /Scripted/);
+    // Risk is real: REVISE on the weak proposal, APPROVE on the revised one.
+    assert.match(riskEvents[0].outputSummary, /^REVISE.*risk to reward 1\.2/);
+    assert.match(riskEvents[1].outputSummary, /^APPROVE.*risk to reward 2$/);
+    assert.doesNotMatch(riskEvents[0].routeReason, /Scripted/);
     assert.match(riskEvents[0].routeReason, /one bounded retry/);
     assert.equal(response.riskReview.decision, "APPROVE");
     assert.equal(response.status, "AWAITING_HUMAN_APPROVAL");
@@ -119,7 +127,7 @@ describe("demo scenarios", () => {
         assert.ok(row.routeReason.trim().length > 0);
         assert.ok(row.inputSummary.trim().length > 0);
         assert.ok(row.outputSummary.trim().length > 0);
-        assert.ok(["ok", "error", "fallback"].includes(row.status));
+        assert.ok(["ok", "error", "demo", "fallback"].includes(row.status));
       }
     }
   });
@@ -130,7 +138,18 @@ describe("demo scenarios", () => {
     const failed = { ...first, error: { code: "TIMEOUT", message: "Timed out" } };
     assert.equal(buildTraceRows([failed])[0].status, "error");
     assert.equal(buildTraceRows([{ ...first, error: null, dataMode: "provider" }])[0].status, "ok");
-    assert.equal(buildTraceRows([first])[0].status, "fallback");
+    // Deliberate demo data reads "demo data", not "fallback".
+    assert.equal(buildTraceRows([first])[0].status, "demo");
+    assert.equal(buildTraceRows([first])[0].statusLabel, "demo data");
+    // A real provider failure replaced by a fixture keeps the fallback badge.
+    const fellBack = {
+      ...first,
+      outputSummary: `${first.outputSummary}, fallback to labelled fixture after PROVIDER_ERROR`,
+    };
+    const rows = buildTraceRows([fellBack, response.trace[1]]);
+    assert.equal(rows[0].status, "fallback");
+    assert.equal(rows[1].status, "fallback");
+    assert.equal(rows[0].statusLabel, "fallback");
   });
 
   it("6. the data mode badge text never says live or real time", () => {

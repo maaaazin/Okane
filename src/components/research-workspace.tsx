@@ -21,6 +21,7 @@ import {
   PaperTradingBanner,
   decisionOutcomeText,
 } from "@/components/paper-trading-banner";
+import { formatDateTime } from "@/components/format-date";
 import { TracePanel } from "@/components/trace-panel";
 import {
   DEMO_SCENARIO_NOTICE,
@@ -171,7 +172,7 @@ function ResultCard({
             {response.evidence.map((evidence) => (
               <li key={evidence.id}>
                 <p>{evidence.summary}</p>
-                <span>{evidence.source} · retrieved {new Date(evidence.retrievedAt).toLocaleString()}</span>
+                <span>{evidence.source} · retrieved {formatDateTime(evidence.retrievedAt)}</span>
               </li>
             ))}
           </ul>
@@ -360,6 +361,7 @@ export function ResearchWorkspace({
             {isRunning ? "Agents are researching…" : "Run paper-trading research"}
           </button>
           <p className="form-note">Runs remain in paper mode. A human must approve before any paper trade is recorded.</p>
+          <p className="form-note">Educational paper trading only. Not financial advice. No real orders are placed.</p>
         </form>
 
         <aside className="agent-overview" aria-label="Agent workflow">
