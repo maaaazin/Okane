@@ -585,6 +585,11 @@ button:disabled {
   color: #155e63;
 }
 
+.trace-status-demo {
+  background: #e8eef7;
+  color: #2c4a73;
+}
+
 .trace-status-fallback {
   background: #f6f0d8;
   color: #6a5411;

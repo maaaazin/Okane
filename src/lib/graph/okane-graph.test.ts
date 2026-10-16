@@ -316,6 +316,39 @@ describe("runOkaneGraph", () => {
     assert.equal(evaluator.calls(), 2);
   });
 
+  it("6d. one real OVERCONFIDENT flag causes one Strategist revision, then the run stops at the limit and reaches approval", async () => {
+    // The Strategist always answers with confidence above the brief, so the real
+    // Evaluator raises OVERCONFIDENT on both passes. Only the counter differs.
+    const strategist = counted(async (req: ResearchRequest, brief: Parameters<typeof runStrategistAgent>[1]) => {
+      const result = await runStrategistAgent(req, brief);
+      if (result.ok && result.kind === "PROPOSAL") {
+        return { ...result, proposal: { ...result.proposal, confidence: 0.95 } };
+      }
+      return result;
+    });
+    const response = expectResponse(
+      await runOkaneGraph(request, {
+        ...deterministic(),
+        agents: demoAgents({ strategist: strategist.fn }),
+      }),
+    );
+    assert.equal(strategist.calls(), 2);
+    assert.deepEqual(agentsOf(response), [
+      "research",
+      "strategist",
+      "risk_guardrail",
+      "evaluator",
+      "strategist",
+      "risk_guardrail",
+      "evaluator",
+    ]);
+    const evaluations = response.trace.filter((event) => event.agent === "evaluator");
+    assert.match(evaluations[0].outputSummary, /route STRATEGIST/);
+    assert.match(evaluations[0].routeReason, /one bounded retry/);
+    assert.match(evaluations[1].outputSummary, /route HUMAN_APPROVAL/);
+    assert.equal(response.status, "AWAITING_HUMAN_APPROVAL");
+  });
+
   it("7. every trace event has a non empty routeReason", async () => {
     const scenarios: Array<Partial<GraphAgents>> = [
       demoAgents(),

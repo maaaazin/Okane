@@ -246,7 +246,11 @@ function buildNodes(runtime: Runtime) {
             thesis: `${state.request.thesis === undefined ? "" : `${state.request.thesis} `}Revision constraints: ${constraints}`,
           };
     const result = await agents.strategist(request, brief);
-    const decision = routeAfterStrategist(result);
+    const routed = routeAfterStrategist(result);
+    const decision: RouteDecision =
+      result.ok && result.kind === "PROPOSAL" && result.note !== undefined
+        ? { ...routed, reason: `${routed.reason}. ${result.note}` }
+        : routed;
     const cleared = { riskReview: null, evaluation: null } as const;
     const inputSummary = `${brief.evidence.length} evidence items${constraints === undefined ? "" : " and revision constraints"}`;
     const dataMode = stateDataMode(state);

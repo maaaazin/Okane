@@ -49,7 +49,7 @@ export function TracePanel({
           <li key={row.key} className="trace-row">
             <div className="trace-row-head">
               <strong>{row.agentLabel}</strong>
-              <span className={`trace-status trace-status-${row.status}`}>{row.status}</span>
+              <span className={`trace-status trace-status-${row.status}`}>{row.statusLabel}</span>
               <span className="trace-elapsed">{row.elapsedMs} ms</span>
             </div>
             <p><span className="trace-key">Input</span> {row.inputSummary}</p>

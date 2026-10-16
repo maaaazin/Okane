@@ -162,6 +162,22 @@ export function runEvaluatorAgent(
     ) {
       nextRoute = "END";
     } else if (
+      // A single flag is enough for one bounded revision while the matching
+      // counter has budget left. After that the score rule below decides.
+      data.riskReview &&
+      data.riskReview.decision === "APPROVE" &&
+      flags.has("MISSING_CITATION") &&
+      data.counters.researchRevisionCount < EVALUATOR_DEFAULTS.maxRevisionCount
+    ) {
+      nextRoute = "RESEARCH";
+    } else if (
+      data.riskReview &&
+      data.riskReview.decision === "APPROVE" &&
+      (flags.has("UNSUPPORTED_CLAIM") || flags.has("OVERCONFIDENT")) &&
+      data.counters.strategyRevisionCount < EVALUATOR_DEFAULTS.maxRevisionCount
+    ) {
+      nextRoute = "STRATEGIST";
+    } else if (
       data.riskReview &&
       data.riskReview.decision === "APPROVE" &&
       score >= EVALUATOR_DEFAULTS.passThreshold

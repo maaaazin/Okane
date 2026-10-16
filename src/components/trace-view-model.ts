@@ -48,29 +48,48 @@ export function buildRoutePath(events: readonly TraceEvent[], status?: RunStatus
   return status === "AWAITING_HUMAN_APPROVAL" ? [...path, HUMAN_APPROVAL_LABEL] : path;
 }
 
-export type TraceRowStatus = "ok" | "error" | "fallback";
+// "demo" is saved data used on purpose. "fallback" is a real provider failure
+// that was replaced by a labelled fixture.
+export type TraceRowStatus = "ok" | "error" | "demo" | "fallback";
 
 export type TraceRowView = {
   key: string;
   agentLabel: string;
   status: TraceRowStatus;
+  statusLabel: string;
   elapsedMs: number;
   inputSummary: string;
   outputSummary: string;
   routeReason: string;
 };
 
-export function rowStatus(event: TraceEvent): TraceRowStatus {
+const FALLBACK_MARKER = /fallback to labelled fixture/i;
+
+// True when any step of the run says a failed provider call was replaced by a fixture.
+export function runUsedFallback(events: readonly TraceEvent[]): boolean {
+  return events.some(
+    (event) => FALLBACK_MARKER.test(event.outputSummary) || FALLBACK_MARKER.test(event.routeReason),
+  );
+}
+
+export function rowStatus(event: TraceEvent, usedFallback = false): TraceRowStatus {
   if (event.error !== null) return "error";
-  return event.dataMode === "fixture" ? "fallback" : "ok";
+  if (event.dataMode !== "fixture") return "ok";
+  return usedFallback ? "fallback" : "demo";
+}
+
+export function rowStatusLabel(status: TraceRowStatus): string {
+  return status === "demo" ? "demo data" : status;
 }
 
 export function buildTraceRows(events: readonly TraceEvent[]): TraceRowView[] {
   const labels = buildRoutePath(events);
+  const usedFallback = runUsedFallback(events);
   return events.map((event, index) => ({
     key: `${index}-${event.agent}-${event.at}`,
     agentLabel: labels[index],
-    status: rowStatus(event),
+    status: rowStatus(event, usedFallback),
+    statusLabel: rowStatusLabel(rowStatus(event, usedFallback)),
     elapsedMs: event.elapsedMs,
     inputSummary: event.inputSummary,
     outputSummary: event.outputSummary,
