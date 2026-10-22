@@ -37,19 +37,6 @@ Evaluator -- unresolved issue --> NO_TRADE
 
 Risk can veto a proposal, and neither the Strategist nor the UI can override that decision. Research and strategy revisions are each limited to one attempt, with an additional graph recursion limit. Every agent transition adds an execution-trace event containing the agent, input and output summaries, elapsed time, data mode, and **route reason**. The result page has an expandable trace panel and a JSON download for assessment.
 
-## Demo the project
-
-The default `.env.example` enables demo mode. Start the app, then use the **Demo scenario** selector:
-
-| Scenario | What to show |
-| --- | --- |
-| **Normal** | Research → Strategist → Risk Guardrail → Evaluator → human approval. Approve to add a paper trade, or Reject to show that no trade is recorded. |
-| **Risk revision** | The first proposal has deliberately weak risk/reward. Risk asks Strategist to revise it once, then reviews the new proposal. The trace shows both visits. |
-| **Insufficient data** | Research stops the graph before a proposal is created. The trace contains only the Research stage. |
-
-Demo scenarios run the real graph and checks against dated, labelled fixtures. The first proposal in **Risk revision** is deliberately weakened by scenario code to exercise the real revision route. **All three demo scenarios use the `RELIANCE.NS` fixture and replace the NSE symbol entered in the form with `RELIANCE.NS`.** To research another symbol, turn demo mode off and configure the model and market-data path; its result then depends on provider availability and evidence quality. Fixture data is never presented as live market data.
-
-The normal and insufficient-data example traces are also checked in at [normal trace](docs/evidence/sample_trace.json) and [insufficient-data trace](docs/evidence/sample_trace_insufficient_data.json).
 
 ## Run locally
 
@@ -78,12 +65,3 @@ npm run trace:sample
 
 The tests cover normal and insufficient-evidence routes, bounded Risk and Evaluator revisions, vetoes, model and provider failure handling, request validation, trace recording, and approval-gated paper-trade decisions. `trace:sample` regenerates the checked-in assessment examples.
 
-## Architecture and limits
-
-- **Stack:** Next.js App Router, TypeScript, LangChain.js, LangGraph.js, and Zod.
-- **Market data:** one server-side adapter normalizes provider or fixture data and records its source, retrieval time, quality, and mode. Prices and timestamps are not invented by the model.
-- **Risk policy:** position size caps modeled loss at 1% of the portfolio, and a proposal needs a risk/reward ratio of at least 1.5 to pass.
-- **Persistence:** run results, traces, and the paper-trade ledger are **in memory**. They can disappear after a server restart or serverless cold start; this is not durable trading infrastructure.
-- **Scope:** a short 1–10 day paper-trading research horizon, with a reliable demo fixture for `RELIANCE.NS`. The live provider path depends on delayed third-party data.
-
-See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for contracts, routing, and trust boundaries, and [AGENTS.md](AGENTS.md) for team conventions. Licensed under [Apache 2.0](LICENSE).
