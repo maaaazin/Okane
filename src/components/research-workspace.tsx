@@ -3,12 +3,10 @@
 import { FormEvent, useMemo, useState } from "react";
 import {
   ApprovalStatusSchema,
-  DemoScenarioSchema,
   FinalResponseSchema,
   PaperTradeSchema,
   ResearchRequestSchema,
   StructuredErrorSchema,
-  type DemoScenario,
   type FinalResponse,
   type HumanDecision,
   type PaperTrade,
@@ -26,7 +24,13 @@ import { TracePanel } from "@/components/trace-panel";
 import {
   DEMO_SCENARIO_NOTICE,
   DEMO_SCENARIO_OPTIONS,
+  LIVE_DATA_NOTICE,
+  SCENARIO_SYMBOL_NOTE,
   dataModeBadgeText,
+  effectiveSymbol,
+  scenarioChoiceFromText,
+  scenarioToSend,
+  type ScenarioChoice,
 } from "@/components/trace-view-model";
 
 type FormFields = {
@@ -207,14 +211,19 @@ export function ResearchWorkspace({
   initialTrades?: readonly PaperTrade[];
   demoMode?: boolean;
 }) {
-  const [scenario, setScenario] = useState<DemoScenario>("normal");
+  const [scenario, setScenario] = useState<ScenarioChoice>("normal");
   const [trades, setTrades] = useState<readonly PaperTrade[]>(initialTrades);
   const [resultTrade, setResultTrade] = useState<PaperTrade | null>(null);
   const [fields, setFields] = useState<FormFields>(INITIAL_FIELDS);
   const [result, setResult] = useState<FinalResponse | null>(null);
   const [error, setError] = useState<StructuredError | null>(null);
   const [isRunning, setIsRunning] = useState(false);
-  const requestPreview = useMemo(() => clientRequest(fields), [fields]);
+  const symbolLocked = demoMode && scenarioToSend(scenario) !== undefined;
+  const shownSymbol = demoMode ? effectiveSymbol(scenario, fields.symbol) : fields.symbol;
+  const requestPreview = useMemo(
+    () => clientRequest({ ...fields, symbol: shownSymbol }),
+    [fields, shownSymbol],
+  );
 
   function setField(field: keyof FormFields, value: string) {
     setFields((current) => ({ ...current, [field]: value }));
@@ -236,7 +245,11 @@ export function ResearchWorkspace({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         // Only the scenario name is sent, and only while demo mode is on.
-        body: JSON.stringify(demoMode ? { ...requestPreview, scenario } : requestPreview),
+        body: JSON.stringify(
+          demoMode && scenarioToSend(scenario) !== undefined
+            ? { ...requestPreview, scenario: scenarioToSend(scenario) }
+            : requestPreview,
+        ),
       });
       const body: unknown = await response.json();
       const parsedResult = FinalResponseSchema.safeParse(body);
@@ -320,8 +333,8 @@ export function ResearchWorkspace({
             <select
               value={scenario}
               onChange={(event) => {
-                const parsed = DemoScenarioSchema.safeParse(event.target.value);
-                if (parsed.success) setScenario(parsed.data);
+                const parsed = scenarioChoiceFromText(event.target.value);
+                if (parsed !== undefined) setScenario(parsed);
               }}
             >
               {DEMO_SCENARIO_OPTIONS.map((option) => (
@@ -329,7 +342,8 @@ export function ResearchWorkspace({
               ))}
             </select>
           </label>
-          <p className="scenario-notice">{DEMO_SCENARIO_NOTICE}</p>
+          <p className="scenario-notice">{symbolLocked ? DEMO_SCENARIO_NOTICE : LIVE_DATA_NOTICE}</p>
+          {symbolLocked ? <p className="scenario-notice">{SCENARIO_SYMBOL_NOTE}</p> : null}
         </div>
       ) : null}
 
@@ -341,7 +355,7 @@ export function ResearchWorkspace({
           </div>
           <label>
             NSE symbol
-            <input value={fields.symbol} onChange={(event) => setField("symbol", event.target.value)} placeholder="RELIANCE.NS" autoComplete="off" required />
+            <input value={shownSymbol} disabled={symbolLocked} onChange={(event) => setField("symbol", event.target.value)} placeholder="RELIANCE.NS" autoComplete="off" required />
           </label>
           <div className="form-row">
             <label>

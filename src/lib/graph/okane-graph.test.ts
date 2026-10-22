@@ -349,6 +349,22 @@ describe("runOkaneGraph", () => {
     assert.equal(response.status, "AWAITING_HUMAN_APPROVAL");
   });
 
+  it("6e. a request without a scenario keeps the typed symbol through every agent", async () => {
+    const tcs: MarketDataResult = {
+      ok: true,
+      snapshot: MarketSnapshotSchema.parse({ ...marketNormal, symbol: "TCS.NS" }),
+    };
+    const response = expectResponse(
+      await runOkaneGraph(
+        { ...request, symbol: "TCS.NS" },
+        { ...deterministic(), agents: { research: researchWith(tcs) } },
+      ),
+    );
+    assert.equal(response.request.symbol, "TCS.NS");
+    assert.equal(response.tradeProposal?.symbol, "TCS.NS");
+    assert.equal(response.status, "AWAITING_HUMAN_APPROVAL");
+  });
+
   it("7. every trace event has a non empty routeReason", async () => {
     const scenarios: Array<Partial<GraphAgents>> = [
       demoAgents(),

@@ -95,8 +95,21 @@ export async function runDemoScenario(
       },
     };
   }
+  // Never swap the typed symbol for the fixture symbol without saying so.
+  const expected = fixtureSymbol(scenario);
+  const typed = request.symbol.trim().toUpperCase();
+  if ((typed.endsWith(".NS") ? typed : `${typed}.NS`) !== expected) {
+    return {
+      ok: false,
+      error: {
+        code: "INVALID_REQUEST",
+        message: `Demo scenarios use saved ${expected} data. Run without a scenario to use ${request.symbol}`,
+        agent: "request_validator",
+      },
+    };
+  }
   return runOkaneGraph(
-    { ...request, symbol: fixtureSymbol(scenario) },
+    { ...request, symbol: expected },
     { ...options, agents: { ...agentsFor(scenario), ...options.agents } },
   );
 }

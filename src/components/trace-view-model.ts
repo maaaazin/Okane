@@ -11,11 +11,38 @@ import type {
 
 export const DEMO_SCENARIO_NOTICE = "Demo scenarios use saved fixture data, not live market data.";
 
-export const DEMO_SCENARIO_OPTIONS: ReadonlyArray<{ value: DemoScenario; label: string }> = [
+// "live" is not a scenario: the form sends no scenario field and the typed symbol is used.
+export type ScenarioChoice = DemoScenario | "live";
+
+export const DEMO_SCENARIO_OPTIONS: ReadonlyArray<{ value: ScenarioChoice; label: string }> = [
   { value: "normal", label: "Normal" },
   { value: "risk_revision", label: "Risk revision" },
   { value: "insufficient_data", label: "Insufficient data" },
+  { value: "live", label: "Live data (no scenario)" },
 ];
+
+// The saved fixtures are for this one symbol.
+export const SCENARIO_SYMBOL = "RELIANCE.NS";
+
+export const SCENARIO_SYMBOL_NOTE =
+  "Scenarios use saved RELIANCE.NS data. Choose Live data to try another symbol.";
+
+export const LIVE_DATA_NOTICE =
+  "Live data uses the delayed provider for the typed symbol. In demo mode the model is a labelled mock.";
+
+export function scenarioChoiceFromText(text: string): ScenarioChoice | undefined {
+  return DEMO_SCENARIO_OPTIONS.find((option) => option.value === text)?.value;
+}
+
+// The scenario name to send, or undefined for a normal request.
+export function scenarioToSend(choice: ScenarioChoice): DemoScenario | undefined {
+  return choice === "live" ? undefined : choice;
+}
+
+// Symbol the form shows and sends. A scenario locks it to the fixture symbol.
+export function effectiveSymbol(choice: ScenarioChoice, typed: string): string {
+  return scenarioToSend(choice) === undefined ? typed : SCENARIO_SYMBOL;
+}
 
 export function dataModeBadgeText(dataMode: DataMode): string {
   return dataMode === "fixture" ? "Demo fixture data" : "Provider data, delayed";
