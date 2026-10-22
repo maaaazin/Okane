@@ -9,8 +9,14 @@ import {
 } from "@/lib/contracts";
 import {
   buildRoutePath,
+  SCENARIO_SYMBOL,
+  SCENARIO_SYMBOL_NOTE,
+  DEMO_SCENARIO_OPTIONS,
   buildTraceRows,
   dataModeBadgeText,
+  effectiveSymbol,
+  scenarioChoiceFromText,
+  scenarioToSend,
 } from "@/components/trace-view-model";
 import { runDemoScenario } from "@/lib/demo-scenarios";
 import type { OkaneGraphOptions } from "@/lib/graph/okane-graph";
@@ -160,6 +166,38 @@ describe("demo scenarios", () => {
     }
     assert.equal(dataModeBadgeText("fixture"), "Demo fixture data");
     assert.equal(dataModeBadgeText("provider"), "Provider data, delayed");
+  });
+
+  it("8. a scenario run for a different typed symbol is rejected, not silently swapped", async () => {
+    for (const scenario of DemoScenarioSchema.options) {
+      const result = await runDemoScenario(scenario, { ...request, symbol: "TCS.NS" }, deterministic());
+      assert.equal(result.ok, false);
+      if (result.ok) throw new Error("unreachable");
+      assert.equal(result.error.code, "INVALID_REQUEST");
+      assert.match(result.error.message, /RELIANCE\.NS/);
+      assert.match(result.error.message, /without a scenario/);
+    }
+    // The fixture symbol itself, with or without the suffix and in any case, still runs.
+    const bare = await runDemoScenario("normal", { ...request, symbol: "reliance" }, deterministic());
+    assert.equal(bare.ok, true);
+  });
+
+  it("9. the form locks the symbol to the fixture symbol for a scenario and frees it for live data", () => {
+    assert.equal(effectiveSymbol("normal", "TCS.NS"), SCENARIO_SYMBOL);
+    assert.equal(effectiveSymbol("risk_revision", "TCS.NS"), SCENARIO_SYMBOL);
+    assert.equal(effectiveSymbol("insufficient_data", "TCS.NS"), SCENARIO_SYMBOL);
+    assert.equal(effectiveSymbol("live", "TCS.NS"), "TCS.NS");
+    assert.equal(scenarioToSend("live"), undefined);
+    assert.equal(scenarioToSend("normal"), "normal");
+    assert.deepEqual(DEMO_SCENARIO_OPTIONS.map((option) => option.value), [
+      "normal",
+      "risk_revision",
+      "insufficient_data",
+      "live",
+    ]);
+    assert.equal(scenarioChoiceFromText("live"), "live");
+    assert.equal(scenarioChoiceFromText("chaos"), undefined);
+    assert.match(SCENARIO_SYMBOL_NOTE, /^Scenarios use saved RELIANCE\.NS data\. Choose Live data to try another symbol\.$/);
   });
 
   it("7. a scenario run is refused when demo mode is off", async () => {
